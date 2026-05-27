@@ -1,0 +1,53 @@
+# dependências
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# produção
+/dist
+
+# testes
+/coverage
+
+# tipescript
+*.tsbuildinfo
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ⚠️  variáveis de ambiente — NUNCA versionar
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# IDE / SO
+.DS_Store
+*.pem
+.vscode/
+.idea/
+Thumbs.db
+
+# claude / harness
+.claude/
+.claude-cache/
+
+# supabase
+/supabase/.temp
+/supabase/.branches
+**/.supabase/
+
+# misc
+*.tgz
+.vercel

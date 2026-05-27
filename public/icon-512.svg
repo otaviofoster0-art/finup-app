@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg-g512" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A2A6E"/>
+      <stop offset="1" stop-color="#1948C9"/>
+    </linearGradient>
+    <linearGradient id="ico-arrow512" x1="160" y1="380" x2="400" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5BA0FF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg-g512)"/>
+  <path d="M132 106 L132 406 L196 406 L196 294 L284 294 L284 246 L196 246 L196 166 L324 166 L324 106 Z" fill="#FFFFFF"/>
+  <rect x="250" y="314" width="38" height="92" rx="8" fill="#FFFFFF"/>
+  <rect x="304" y="266" width="38" height="140" rx="8" fill="#FFFFFF"/>
+  <rect x="358" y="206" width="38" height="200" rx="8" fill="#FFFFFF"/>
+  <path d="M228 352 L320 260 L292 260 L292 232 L378 232 L378 318 L350 318 L350 290 L256 388 Z" fill="url(#ico-arrow512)"/>
+</svg>

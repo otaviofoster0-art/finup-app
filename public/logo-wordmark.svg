@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 180" fill="none" font-family="Inter, Segoe UI, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="wm-grad" x1="20" y1="10" x2="180" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A2A6E"/>
+      <stop offset="0.55" stop-color="#1948C9"/>
+      <stop offset="1" stop-color="#2D7CFF"/>
+    </linearGradient>
+    <linearGradient id="wm-arrow" x1="50" y1="120" x2="160" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1948C9"/>
+      <stop offset="1" stop-color="#5BA0FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- símbolo -->
+  <g transform="translate(0,0)">
+    <path d="M32 18 L32 102 L50 102 L50 70 L76 70 L76 56 L50 56 L50 34 L88 34 L88 18 Z"
+          fill="url(#wm-grad)"/>
+    <rect x="68" y="80" width="10" height="22" rx="2" fill="url(#wm-grad)"/>
+    <rect x="82" y="66" width="10" height="36" rx="2" fill="url(#wm-grad)"/>
+    <rect x="96" y="48" width="10" height="54" rx="2" fill="url(#wm-grad)"/>
+    <path d="M62 92 L88 66 L80 66 L80 58 L104 58 L104 82 L96 82 L96 74 L72 98 Z"
+          fill="url(#wm-arrow)"/>
+  </g>
+
+  <!-- wordmark FinUp -->
+  <text x="135" y="92" font-size="68" font-weight="800" fill="url(#wm-grad)" letter-spacing="-2">FinUp</text>
+
+  <!-- tagline -->
+  <line x1="135" y1="128" x2="155" y2="128" stroke="#1948C9" stroke-width="1.5"/>
+  <line x1="345" y1="128" x2="365" y2="128" stroke="#1948C9" stroke-width="1.5"/>
+  <text x="250" y="132" font-size="11" font-weight="600" fill="#1948C9" letter-spacing="2" text-anchor="middle">EDUCAÇÃO FINANCEIRA</text>
+  <text x="250" y="150" font-size="11" font-weight="600" fill="#1948C9" letter-spacing="2" text-anchor="middle">QUE TRANSFORMA FUTUROS</text>
+</svg>
