@@ -25,7 +25,29 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     (async () => {
       const supabase = getSupabaseBrowser();
-      // Depois do exchangeCodeForSession no /auth/callback, deve haver uma sessão válida
+
+      // 1) Se chegou com ?code=... (PKCE), troca por sessão
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setEstado("invalido");
+          return;
+        }
+        // Limpa o code da URL pra não vazar em logs / histórico do navegador
+        url.searchParams.delete("code");
+        window.history.replaceState({}, "", url.toString());
+      }
+
+      // 2) Se chegou com hash #access_token=... (implicit flow, padrão antigo)
+      if (window.location.hash.includes("access_token")) {
+        // Supabase-js já processa o hash automaticamente no onAuthStateChange
+        await new Promise((r) => setTimeout(r, 300));
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+
+      // 3) Verifica se temos sessão (de qualquer fluxo)
       const { data: { session } } = await supabase.auth.getSession();
       setEstado(session ? "pronto" : "invalido");
     })();

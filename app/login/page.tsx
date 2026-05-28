@@ -228,8 +228,9 @@ async function esquecerSenha(email: string, toast: (m: string) => void) {
     return;
   }
   const supabase = getSupabaseBrowser();
+  // Aterrissa direto na tela de redefinir — a própria página troca o code por sessão
   await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${getSiteUrl()}/auth/callback?type=recovery`,
+    redirectTo: `${getSiteUrl()}/auth/reset-password`,
   });
   toast("Se a conta existir, mandamos o link no email");
 }
