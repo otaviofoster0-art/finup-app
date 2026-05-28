@@ -26,65 +26,86 @@ export default function ResetPasswordPage() {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
 
-    // Listener pra PASSWORD_RECOVERY (Supabase fala isso quando processa o token)
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cancelled) return;
-      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        setEstado("pronto");
-      }
-    });
-
     (async () => {
-      const url = new URL(window.location.href);
+      // 1) Implicit flow — tokens vêm no #hash
+      //    Esse é o formato que o Supabase usa pra recovery hoje.
+      //    Parseamos manualmente pra ter controle total.
+      const hash = window.location.hash.startsWith("#")
+        ? window.location.hash.substring(1)
+        : "";
+      if (hash) {
+        const hp = new URLSearchParams(hash);
+        const access_token = hp.get("access_token");
+        const refresh_token = hp.get("refresh_token");
+        const err = hp.get("error_description") || hp.get("error");
 
-      // Caso 1: PKCE flow — ?code=... na query
-      const code = url.searchParams.get("code");
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!cancelled) {
+        if (err) {
+          setErro(decodeURIComponent(err));
+          setEstado("invalido");
+          return;
+        }
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          if (cancelled) return;
           if (error) {
+            setErro(error.message);
             setEstado("invalido");
             return;
           }
-          url.searchParams.delete("code");
-          window.history.replaceState({}, "", url.pathname);
+          window.history.replaceState({}, "", window.location.pathname);
+          setEstado("pronto");
+          return;
         }
       }
 
-      // Caso 2: token_hash flow (formato novo do Supabase)
+      // 2) PKCE flow — ?code=...
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (cancelled) return;
+        if (error) {
+          setErro(error.message);
+          setEstado("invalido");
+          return;
+        }
+        url.searchParams.delete("code");
+        window.history.replaceState({}, "", url.pathname);
+        setEstado("pronto");
+        return;
+      }
+
+      // 3) token_hash flow (formato OTP novo)
       const tokenHash = url.searchParams.get("token_hash");
       const type = url.searchParams.get("type");
-      if (tokenHash && type === "recovery") {
+      if (tokenHash && (type === "recovery" || type === "magiclink")) {
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: "recovery",
         });
-        if (!cancelled) {
-          if (error) {
-            setEstado("invalido");
-            return;
-          }
-          window.history.replaceState({}, "", url.pathname);
+        if (cancelled) return;
+        if (error) {
+          setErro(error.message);
+          setEstado("invalido");
+          return;
         }
+        window.history.replaceState({}, "", url.pathname);
+        setEstado("pronto");
+        return;
       }
 
-      // Caso 3: implicit flow — #access_token=... no hash
-      // O SDK processa automaticamente via onAuthStateChange.
-      // Esperamos um pouco e checamos a sessão.
-      await new Promise((r) => setTimeout(r, 1200));
-      if (cancelled) return;
-
+      // 4) Fallback: já temos sessão? (usuário logou normalmente e tá tentando trocar a senha)
       const { data: { session } } = await supabase.auth.getSession();
-      if (window.location.hash.includes("access_token")) {
-        window.history.replaceState({}, "", window.location.pathname);
-      }
-
-      setEstado((prev) => (prev === "pronto" ? prev : session ? "pronto" : "invalido"));
+      if (cancelled) return;
+      setEstado(session ? "pronto" : "invalido");
     })();
 
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
     };
   }, []);
 
@@ -151,11 +172,16 @@ export default function ResetPasswordPage() {
           <div className="rounded-2xl border border-danger/30 bg-danger/10 p-5 text-sm text-text">
             <div className="flex items-start gap-3">
               <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
-              <div>
+              <div className="flex-1">
                 <div className="font-semibold text-danger">Link inválido ou expirado.</div>
                 <p className="mt-1 text-text-muted">
-                  Volte pra tela de login e peça um novo email de recuperação.
+                  Volte pra tela de login e peça um novo email de recuperação. Cada link só funciona uma vez.
                 </p>
+                {erro && (
+                  <p className="mt-2 break-words text-xs text-text-muted">
+                    Detalhe técnico: {erro}
+                  </p>
+                )}
                 <Link href="/login" className="mt-3 inline-block font-semibold text-brand hover:underline">
                   Ir pra tela de login
                 </Link>
