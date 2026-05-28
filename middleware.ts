@@ -8,8 +8,9 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match em tudo exceto arquivos estáticos
+     * Match em tudo exceto arquivos estáticos e rotas /api.
+     * /api/* faz auth internamente quando precisa (ex: /api/assistant).
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.jpg$|.*\\.webp$).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.jpg$|.*\\.webp$).*)",
   ],
 };
