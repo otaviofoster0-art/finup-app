@@ -2,9 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 /**
- * Callback de autenticação:
- *  - confirmação de email (?code=...)
- *  - recovery de senha (?type=recovery)
+ * Callback de autenticação. Trata 3 cenários:
+ *   1) ?code=...      → confirmação de email no signup, troca por sessão
+ *   2) ?type=recovery → veio do "esqueci senha", manda pra /auth/reset-password
+ *   3) padrão         → manda pra /carteira (ou ?next=...)
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -17,9 +18,8 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // Pra recovery, redireciona pra uma página de troca de senha futura. Por enquanto, /perfil.
   if (type === "recovery") {
-    return NextResponse.redirect(new URL("/perfil?recovery=1", url.origin));
+    return NextResponse.redirect(new URL("/auth/reset-password", url.origin));
   }
 
   return NextResponse.redirect(new URL(next, url.origin));

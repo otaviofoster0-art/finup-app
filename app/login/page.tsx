@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useToast } from "@/components/ui/toast";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
+import { getSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 type Mode = "entrar" | "criar";
@@ -56,7 +57,7 @@ function LoginInner() {
               nome: nome.trim(),
               empresa: empresa.trim() || null,
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${getSiteUrl()}/auth/callback`,
           },
         });
         if (error) throw error;
@@ -228,7 +229,7 @@ async function esquecerSenha(email: string, toast: (m: string) => void) {
   }
   const supabase = getSupabaseBrowser();
   await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+    redirectTo: `${getSiteUrl()}/auth/callback?type=recovery`,
   });
   toast("Se a conta existir, mandamos o link no email");
 }
