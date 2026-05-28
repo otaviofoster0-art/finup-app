@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { responderLocal, type LocalContext } from "@/lib/ai/local-assistant";
+import { useSession } from "@/lib/hooks/use-session";
+import { useLessonProgress } from "@/lib/hooks/use-lesson-progress";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -25,13 +28,15 @@ Sempre **conservador** — nunca vou te mandar apostar ou tomar dívida pra inve
 O que tá te tirando o sono hoje? 💭`;
 
 export function AIAssistant() {
+  const { profile } = useSession();
+  const { totalXp, totalConcluidas } = useLessonProgress();
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: SAUDACAO },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -67,32 +72,28 @@ export function AIAssistant() {
     };
   }, [open]);
 
-  async function enviar(texto: string) {
+  function enviar(texto: string) {
     const msg = texto.trim();
     if (!msg || loading) return;
-    setErro(null);
     const next: Message[] = [...messages, { role: "user", content: msg }];
     setMessages(next);
     setInput("");
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErro(data.error || "Erro ao chamar o assistente");
-      } else {
-        setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
-      }
-    } catch (e: unknown) {
-      setErro(e instanceof Error ? e.message : "Erro de rede");
-    } finally {
+    const ctx: LocalContext = {
+      nome: profile?.nome,
+      sonho: profile?.sonho ?? null,
+      xp: totalXp,
+      licoesConcluidas: totalConcluidas,
+    };
+
+    // Pequeno delay pra parecer que "pensou" (UX). Tudo roda local, sem rede.
+    const resposta = responderLocal(msg, ctx);
+    const delay = 350 + Math.min(900, resposta.length * 4);
+    setTimeout(() => {
+      setMessages((m) => [...m, { role: "assistant", content: resposta }]);
       setLoading(false);
-    }
+    }, delay);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -120,9 +121,7 @@ export function AIAssistant() {
         )}
       >
         <Bot className="h-7 w-7" />
-        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[10px] font-extrabold text-[#3a2700] ring-2 ring-bg">
-          AI
-        </span>
+        <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-success ring-2 ring-bg" />
       </button>
 
       {/* Modal de chat */}
@@ -145,7 +144,7 @@ export function AIAssistant() {
                   <div>
                     <div className="text-sm font-bold text-text">FinUp Assistente</div>
                     <div className="text-[11px] text-text-muted">
-                      Educação financeira conservadora · IA
+                      Educação financeira · conservador
                     </div>
                   </div>
                 </div>
@@ -189,13 +188,6 @@ export function AIAssistant() {
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Erro */}
-              {erro && (
-                <div className="border-t border-danger/30 bg-danger/10 px-4 py-2.5 text-xs text-danger">
-                  {erro}
                 </div>
               )}
 

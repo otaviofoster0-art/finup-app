@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -61,11 +61,16 @@ function CarteiraInner({
   const { categorias } = useCategorias();
 
   // Fix retroativo: usuários que passaram pelo onboarding antes da v1.1
-  // tinham sonho no profile mas nenhuma caixinha. Cria automaticamente uma vez.
+  // tinham sonho no profile mas nenhuma caixinha. Cria automaticamente UMA vez.
+  // O ref evita corrida: sem ele o effect dispara de novo antes do refetch
+  // terminar e cria duplicatas.
+  const autoCriado = useRef(false);
   useEffect(() => {
+    if (autoCriado.current) return;
     if (loadingCaixinhas) return;
     if (caixinhas.length > 0) return;
     if (!sonhoNome || !valorSonho) return;
+    autoCriado.current = true;
     addCaixinha({
       nome: sonhoNome,
       meta: valorSonho,
