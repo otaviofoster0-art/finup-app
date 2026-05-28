@@ -23,34 +23,69 @@ export default function ResetPasswordPage() {
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const supabase = getSupabaseBrowser();
+    const supabase = getSupabaseBrowser();
+    let cancelled = false;
 
-      // 1) Se chegou com ?code=... (PKCE), troca por sessão
+    // Listener pra PASSWORD_RECOVERY (Supabase fala isso quando processa o token)
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setEstado("pronto");
+      }
+    });
+
+    (async () => {
       const url = new URL(window.location.href);
+
+      // Caso 1: PKCE flow — ?code=... na query
       const code = url.searchParams.get("code");
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          setEstado("invalido");
-          return;
+        if (!cancelled) {
+          if (error) {
+            setEstado("invalido");
+            return;
+          }
+          url.searchParams.delete("code");
+          window.history.replaceState({}, "", url.pathname);
         }
-        // Limpa o code da URL pra não vazar em logs / histórico do navegador
-        url.searchParams.delete("code");
-        window.history.replaceState({}, "", url.toString());
       }
 
-      // 2) Se chegou com hash #access_token=... (implicit flow, padrão antigo)
+      // Caso 2: token_hash flow (formato novo do Supabase)
+      const tokenHash = url.searchParams.get("token_hash");
+      const type = url.searchParams.get("type");
+      if (tokenHash && type === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+        if (!cancelled) {
+          if (error) {
+            setEstado("invalido");
+            return;
+          }
+          window.history.replaceState({}, "", url.pathname);
+        }
+      }
+
+      // Caso 3: implicit flow — #access_token=... no hash
+      // O SDK processa automaticamente via onAuthStateChange.
+      // Esperamos um pouco e checamos a sessão.
+      await new Promise((r) => setTimeout(r, 1200));
+      if (cancelled) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
       if (window.location.hash.includes("access_token")) {
-        // Supabase-js já processa o hash automaticamente no onAuthStateChange
-        await new Promise((r) => setTimeout(r, 300));
         window.history.replaceState({}, "", window.location.pathname);
       }
 
-      // 3) Verifica se temos sessão (de qualquer fluxo)
-      const { data: { session } } = await supabase.auth.getSession();
-      setEstado(session ? "pronto" : "invalido");
+      setEstado((prev) => (prev === "pronto" ? prev : session ? "pronto" : "invalido"));
     })();
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function salvar(e: React.FormEvent) {

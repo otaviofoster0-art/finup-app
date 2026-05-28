@@ -18,6 +18,14 @@ export function getSupabaseBrowser(): SupabaseClient {
       "Variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY são obrigatórias. Veja .env.example.",
     );
   }
-  _client = createBrowserClient(url, key);
+  _client = createBrowserClient(url, key, {
+    auth: {
+      // Processa tokens vindos no hash fragment (#access_token=...) automaticamente.
+      // Crítico pro fluxo de recovery, que o Supabase entrega via hash.
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
   return _client;
 }
