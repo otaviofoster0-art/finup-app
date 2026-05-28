@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -37,13 +37,43 @@ import type { Caixinha, Transacao, Tipo } from "@/lib/supabase/types";
 import { cn, formatBRL, formatMonths, monthsToGoal } from "@/lib/utils";
 
 export default function CarteiraPage() {
-  return <SessionGate>{(s) => <CarteiraInner sonhoNome={s.sonho ?? "Sonho"} />}</SessionGate>;
+  return (
+    <SessionGate>
+      {(s) => (
+        <CarteiraInner
+          sonhoNome={s.sonho}
+          valorSonho={s.valorSonho}
+        />
+      )}
+    </SessionGate>
+  );
 }
 
-function CarteiraInner({ sonhoNome }: { sonhoNome: string }) {
+function CarteiraInner({
+  sonhoNome,
+  valorSonho,
+}: {
+  sonhoNome: string | null;
+  valorSonho: number | null;
+}) {
   const { transacoes, totaisMes, remove: removeTransacao } = useTransacoes();
-  const { caixinhas, remove: removeCaixinha } = useCaixinhas();
+  const { caixinhas, remove: removeCaixinha, add: addCaixinha, loading: loadingCaixinhas } = useCaixinhas();
   const { categorias } = useCategorias();
+
+  // Fix retroativo: usuários que passaram pelo onboarding antes da v1.1
+  // tinham sonho no profile mas nenhuma caixinha. Cria automaticamente uma vez.
+  useEffect(() => {
+    if (loadingCaixinhas) return;
+    if (caixinhas.length > 0) return;
+    if (!sonhoNome || !valorSonho) return;
+    addCaixinha({
+      nome: sonhoNome,
+      meta: valorSonho,
+      atual: 0,
+      emoji: "🎯",
+      cor_class: "from-brand to-brand-bright",
+    });
+  }, [loadingCaixinhas, caixinhas.length, sonhoNome, valorSonho, addCaixinha]);
 
   const porCategoria = useMemo(
     () => porCategoriaDoMes(transacoes, categorias),

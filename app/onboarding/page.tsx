@@ -25,18 +25,19 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/lib/hooks/use-session";
 import { updateProfile } from "@/lib/session";
+import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { cn, formatBRL } from "@/lib/utils";
 
 type Step = 0 | 1 | 2 | 3;
 type Situacao = "no_vermelho" | "no_zero" | "sobra_pouca" | "sobra_boa";
 
-const sonhosPresets: { label: string; value: number; icon: React.ReactNode }[] = [
-  { label: "Viagem pra Disney",       value: 18000, icon: <Plane className="h-5 w-5" /> },
-  { label: "Carro novo",              value: 65000, icon: <Car className="h-5 w-5" /> },
-  { label: "Casa própria",            value: 120000, icon: <Home className="h-5 w-5" /> },
-  { label: "Faculdade dos filhos",    value: 40000, icon: <GraduationCap className="h-5 w-5" /> },
-  { label: "Reserva de emergência",   value: 15000, icon: <PiggyBank className="h-5 w-5" /> },
-  { label: "Casamento",               value: 30000, icon: <HeartHandshake className="h-5 w-5" /> },
+const sonhosPresets: { label: string; value: number; icon: React.ReactNode; emoji: string }[] = [
+  { label: "Viagem pra Disney",       value: 18000, icon: <Plane className="h-5 w-5" />, emoji: "🏰" },
+  { label: "Carro novo",              value: 65000, icon: <Car className="h-5 w-5" />, emoji: "🚗" },
+  { label: "Casa própria",            value: 120000, icon: <Home className="h-5 w-5" />, emoji: "🏡" },
+  { label: "Faculdade dos filhos",    value: 40000, icon: <GraduationCap className="h-5 w-5" />, emoji: "🎓" },
+  { label: "Reserva de emergência",   value: 15000, icon: <PiggyBank className="h-5 w-5" />, emoji: "🛟" },
+  { label: "Casamento",               value: 30000, icon: <HeartHandshake className="h-5 w-5" />, emoji: "💍" },
 ];
 
 const situacoes: { value: Situacao; label: string; desc: string; icon: React.ReactNode }[] = [
@@ -110,6 +111,29 @@ export default function OnboardingPage() {
       onboarding_completo: true,
       bio: sonho ? `Indo atrás de ${sonho.toLowerCase()}.` : null,
     });
+
+    // Cria a primeira caixinha automaticamente baseada no sonho
+    if (sonho.trim() && valorSonho > 0 && userId) {
+      const emojiPreset = sonhosPresets.find((p) => p.label === sonho.trim())?.emoji ?? "🎯";
+      const supabase = getSupabaseBrowser();
+      // Só insere se ainda não houver caixinha (evita duplicação se o user voltar)
+      const { count } = await supabase
+        .from("caixinhas")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+
+      if (!count) {
+        await supabase.from("caixinhas").insert({
+          user_id: userId,
+          nome: sonho.trim(),
+          meta: valorSonho,
+          atual: 0,
+          emoji: emojiPreset,
+          cor_class: "from-brand to-brand-bright",
+        });
+      }
+    }
+
     await refresh();
     router.push("/carteira");
   }

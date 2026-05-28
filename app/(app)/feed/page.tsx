@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Search,
-  Send,
-  Share2,
-  Sparkles,
-  Trophy,
-  Trash2,
-} from "lucide-react";
+import { Heart, MoreHorizontal, Search, Send, Sparkles, Trophy, Trash2 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SessionGate } from "@/components/session-gate";
 import { Card } from "@/components/ui/card";
@@ -21,6 +11,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/toast";
 import { usePosts } from "@/lib/hooks/use-posts";
 import { useLessonProgress } from "@/lib/hooks/use-lesson-progress";
+import { useRanking } from "@/lib/hooks/use-ranking";
 import type { PostWithAuthor } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +23,7 @@ export default function FeedPage() {
           userId={s.userId}
           nome={s.nome}
           empresa={s.empresa ?? "Empresa"}
+          foto={s.fotoUrl}
         />
       )}
     </SessionGate>
@@ -42,10 +34,12 @@ function FeedInner({
   userId,
   nome,
   empresa,
+  foto,
 }: {
   userId: string;
   nome: string;
   empresa: string;
+  foto: string | null;
 }) {
   const [busca, setBusca] = useState("");
   const [buscaDebounced, setBuscaDebounced] = useState("");
@@ -66,19 +60,8 @@ function FeedInner({
     .join("")
     .toUpperCase() || "U";
 
-  const ranking = useMemo(() => {
-    const map = new Map<string, { nome: string; iniciais: string; pontos: number }>();
-    for (const p of posts) {
-      const e = map.get(p.autor_nome) ?? {
-        nome: p.autor_nome,
-        iniciais: p.autor_nome.split(" ").slice(0, 2).map((x) => x[0] ?? "").join("").toUpperCase() || "U",
-        pontos: 0,
-      };
-      e.pontos += p.curtidas + 5;
-      map.set(p.autor_nome, e);
-    }
-    return [...map.values()].sort((a, b) => b.pontos - a.pontos).slice(0, 3);
-  }, [posts]);
+  const { ranking: rankingFull } = useRanking(posts);
+  const ranking = rankingFull.slice(0, 3);
 
   return (
     <>
@@ -87,7 +70,7 @@ function FeedInner({
         {/* Composer */}
         <Card className="mb-4">
           <div className="flex items-center gap-3">
-            <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" />
+            <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" foto={foto} />
             <button
               onClick={() => setComposerOpen(true)}
               className="press flex-1 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-left text-sm text-text-muted transition hover:border-brand/30"
@@ -120,23 +103,34 @@ function FeedInner({
               </div>
             </div>
             <div className="mt-4 space-y-2">
-              {ranking.map((r, i) => (
-                <div
-                  key={r.nome}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl bg-surface p-2.5",
-                    i === 0 && "ring-2 ring-gold/50",
-                  )}
-                >
-                  <div className="w-5 text-center text-sm font-bold text-text-muted">{i + 1}º</div>
-                  <Avatar iniciais={r.iniciais} cor="from-brand to-accent" />
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold text-text">{r.nome}</div>
-                    <div className="text-xs text-text-muted">{r.pontos} pontos</div>
+              {ranking.map((r, i) => {
+                const iniciaisR = r.nome
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((x) => x[0] ?? "")
+                  .join("")
+                  .toUpperCase() || "U";
+                return (
+                  <div
+                    key={r.user_id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl bg-surface p-2.5",
+                      i === 0 && "ring-2 ring-gold/50",
+                    )}
+                  >
+                    <div className="w-5 text-center text-sm font-bold text-text-muted">{i + 1}º</div>
+                    <Avatar iniciais={iniciaisR} cor="from-brand to-accent" foto={r.foto_url} />
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-text">{r.nome}</div>
+                      <div className="text-xs text-text-muted">
+                        <strong className="text-text">{r.pontos}</strong> pts ·{" "}
+                        {r.xp_total} XP · {r.posts} post{r.posts !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    {i === 0 && <span className="text-lg">🏆</span>}
                   </div>
-                  {i === 0 && <span className="text-lg">🏆</span>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         )}
@@ -186,6 +180,7 @@ function FeedInner({
         onClose={() => setComposerOpen(false)}
         autorNome={nome}
         autorEmpresa={empresa}
+        autorFoto={foto}
         publicar={publicar}
         xp={totalXp}
         licoesConcluidas={totalConcluidas}
@@ -220,7 +215,7 @@ function PostCard({
   return (
     <Card className="press-sm transition-shadow hover:shadow-soft">
       <div className="flex items-start gap-3">
-        <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" />
+        <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" foto={post.autor_foto} />
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div>
@@ -255,7 +250,7 @@ function PostCard({
           )}
           <p className="mt-3 whitespace-pre-line text-sm text-text">{post.texto}</p>
 
-          <div className="mt-4 flex items-center gap-6 text-text-muted">
+          <div className="mt-4 flex items-center text-text-muted">
             <button
               onClick={onCurtir}
               className={cn(
@@ -271,13 +266,6 @@ function PostCard({
               />
               <span className="tabular-nums">{post.curtidas}</span>
             </button>
-            <button className="inline-flex items-center gap-1.5 text-sm hover:text-text">
-              <MessageCircle className="h-5 w-5" />
-              <span>0</span>
-            </button>
-            <button className="ml-auto text-text-muted hover:text-text" aria-label="Compartilhar">
-              <Share2 className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -285,11 +273,31 @@ function PostCard({
   );
 }
 
-function Avatar({ iniciais, cor }: { iniciais: string; cor: string }) {
+function Avatar({
+  iniciais,
+  cor,
+  foto,
+  size = "md",
+}: {
+  iniciais: string;
+  cor: string;
+  foto?: string | null;
+  size?: "sm" | "md";
+}) {
+  const dims = size === "sm" ? "h-9 w-9 text-xs" : "h-11 w-11 text-sm";
+  if (foto) {
+    return (
+      <div className={cn("shrink-0 overflow-hidden rounded-full border-2 border-border", dims)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={foto} alt={iniciais} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div
       className={cn(
-        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white",
+        "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white",
+        dims,
         cor,
       )}
     >
@@ -310,6 +318,7 @@ function ComposerSheet({
   onClose,
   autorNome,
   autorEmpresa,
+  autorFoto,
   publicar,
   xp,
   licoesConcluidas,
@@ -318,6 +327,7 @@ function ComposerSheet({
   onClose: () => void;
   autorNome: string;
   autorEmpresa: string;
+  autorFoto: string | null;
   publicar: (texto: string, badge?: string) => Promise<unknown>;
   xp: number;
   licoesConcluidas: number;
@@ -360,7 +370,7 @@ function ComposerSheet({
     <Sheet open={open} onClose={onClose} title="Compartilhar com a galera">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" />
+          <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" foto={autorFoto} />
           <div>
             <div className="text-sm font-semibold text-text">{autorNome}</div>
             <div className="text-xs text-text-muted">{autorEmpresa}</div>

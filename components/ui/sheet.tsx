@@ -30,22 +30,27 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-50 h-[100dvh] w-screen overflow-hidden">
+      {/* Backdrop */}
       <button
         aria-label="Fechar"
         onClick={onClose}
         className="absolute inset-0 bg-black/55 backdrop-blur-sm animate-fade-in"
       />
+
+      {/* Camada flex que cobre 100% da viewport e alinha o sheet */}
       <div
         className={cn(
-          "relative mx-auto flex w-full max-w-xl px-3",
-          side === "bottom" ? "items-end pt-10" : "items-center py-6",
+          "pointer-events-none absolute inset-0 flex h-full w-full",
+          side === "bottom" ? "items-end" : "items-center",
         )}
       >
         <div
           className={cn(
-            "relative flex w-full flex-col overflow-hidden border border-border bg-surface shadow-soft animate-scale-in",
-            side === "bottom" ? "rounded-t-3xl safe-bottom max-h-[92dvh]" : "rounded-3xl max-h-[92dvh]",
+            "pointer-events-auto relative mx-auto flex w-full max-w-xl flex-col overflow-hidden border border-border bg-surface shadow-soft animate-scale-in",
+            side === "bottom"
+              ? "rounded-t-3xl safe-bottom max-h-[92dvh]"
+              : "mx-3 rounded-3xl max-h-[92dvh]",
           )}
         >
           <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface px-6 py-4">
@@ -58,7 +63,7 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 pb-2 pt-5">{children}</div>
+          <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-5">{children}</div>
         </div>
       </div>
     </div>
