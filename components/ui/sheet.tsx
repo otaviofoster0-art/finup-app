@@ -36,6 +36,12 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
     <div
       role="dialog"
       aria-modal="true"
+      className={cn(
+        "fixed inset-0 flex justify-center",
+        // Mobile: stretch (sem alinhamento — painel ocupa tela toda)
+        // Desktop: alinha conforme prop
+        side === "bottom" ? "sm:items-end" : "sm:items-center",
+      )}
       style={{
         position: "fixed",
         top: 0,
@@ -43,9 +49,6 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
         width: "100vw",
         height: "100vh",
         zIndex: 9999,
-        display: "flex",
-        alignItems: side === "bottom" ? "flex-end" : "center",
-        justifyContent: "center",
       }}
     >
       {/* Backdrop */}
@@ -56,15 +59,16 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
         className="backdrop-blur-sm animate-fade-in"
       />
 
-      {/* Painel */}
+      {/* Painel — em mobile (< sm) ocupa a tela toda (estilo Duolingo).
+          Em desktop fica centralizado com altura fixa. */}
       <div
         className={cn(
           "relative flex flex-col overflow-hidden",
           "bg-surface border border-border shadow-2xl animate-scale-in",
-          "w-full",
+          "w-full h-full sm:h-[90vh]",
           side === "bottom"
-            ? "max-w-xl rounded-t-3xl max-h-[92vh]"
-            : "mx-3 max-w-lg rounded-3xl max-h-[90vh]",
+            ? "sm:max-w-xl sm:rounded-t-3xl sm:h-[92vh]"
+            : "sm:max-w-lg sm:mx-3 sm:rounded-3xl",
         )}
         style={{ zIndex: 1 }}
       >
