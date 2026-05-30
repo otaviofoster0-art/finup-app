@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Flame, Heart, KeyRound, Lock, Star, Trophy } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SessionGate } from "@/components/session-gate";
 import { Card } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { LessonModal } from "@/components/lesson-modal";
 import { SkipQuizModal } from "@/components/skip-quiz-modal";
 import { modulos, type Licao, type Modulo } from "@/lib/lessons";
 import { useLessonProgress } from "@/lib/hooks/use-lesson-progress";
@@ -21,12 +21,23 @@ export default function TrilhaPage() {
 }
 
 function TrilhaInner() {
+  const router = useRouter();
   const { progress, refresh: refreshProgress } = useLessonProgress();
   const game = useGameState();
   const [moduloAtivoId, setModuloAtivoId] = useState<number>(1);
   const moduloAtivo = modulos.find((m) => m.id === moduloAtivoId) ?? modulos[0];
-  const [aberta, setAberta] = useState<Licao | null>(null);
   const [provaSkip, setProvaSkip] = useState<Modulo | null>(null);
+
+  // Re-carrega progresso ao voltar de uma aula (pra atualizar bolinhas concluídas)
+  useEffect(() => {
+    refreshProgress();
+    game.refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function abrirAula(l: Licao) {
+    router.push(`/trilha/aula/${moduloAtivo.id}/${l.id}`);
+  }
 
   return (
     <>
@@ -144,7 +155,7 @@ function TrilhaInner() {
           <JornadaPath
             modulo={moduloAtivo}
             progress={progress}
-            onAbrir={(l) => setAberta(l)}
+            onAbrir={abrirAula}
           />
 
           {/* Próximo módulo */}
@@ -179,16 +190,6 @@ function TrilhaInner() {
         </section>
       </main>
 
-      <LessonModal
-        licao={aberta}
-        moduloId={moduloAtivo.id}
-        onClose={() => setAberta(null)}
-        onConcluida={() => {
-          // Recarrega game state (streak/XP/vidas) e progresso após aula
-          game.refresh();
-          refreshProgress();
-        }}
-      />
       <SkipQuizModal
         modulo={provaSkip}
         onClose={() => setProvaSkip(null)}
