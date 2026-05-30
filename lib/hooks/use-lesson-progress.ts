@@ -10,18 +10,23 @@ export function useLessonProgress() {
 
   const refresh = useCallback(async () => {
     const supabase = getSupabaseBrowser();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setProgress([]);
+        setLoading(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("lesson_progress")
+        .select("*")
+        .eq("user_id", user.id);
+      setProgress((data ?? []) as LessonProgress[]);
+    } catch {
       setProgress([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    const { data } = await supabase
-      .from("lesson_progress")
-      .select("*")
-      .eq("user_id", user.id);
-    setProgress((data ?? []) as LessonProgress[]);
-    setLoading(false);
   }, []);
 
   useEffect(() => {

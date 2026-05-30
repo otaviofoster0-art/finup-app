@@ -41,13 +41,13 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
       {/* Camada flex que cobre 100% da viewport e alinha o sheet */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 flex h-full w-full",
+          "pointer-events-none absolute inset-0 flex h-full w-full justify-center",
           side === "bottom" ? "items-end" : "items-center",
         )}
       >
         <div
           className={cn(
-            "pointer-events-auto relative mx-auto flex w-full max-w-xl flex-col overflow-hidden border border-border bg-surface shadow-soft animate-scale-in",
+            "pointer-events-auto relative flex w-full max-w-xl flex-col overflow-hidden border border-border bg-surface shadow-soft animate-scale-in",
             side === "bottom"
               ? "rounded-t-3xl safe-bottom max-h-[92dvh]"
               : "mx-3 rounded-3xl max-h-[92dvh]",
