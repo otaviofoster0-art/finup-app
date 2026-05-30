@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { ArrowLeft, Building2, Lock, Mail, User } from "lucide-react";
+import { ArrowLeft, Lock, Mail, User } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ function LoginInner() {
 
   const [mode, setMode] = useState<Mode>("entrar");
   const [nome, setNome] = useState("");
-  const [empresa, setEmpresa] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,7 +54,6 @@ function LoginInner() {
           options: {
             data: {
               nome: nome.trim(),
-              empresa: empresa.trim() || null,
             },
             emailRedirectTo: `${getSiteUrl()}/auth/callback`,
           },
@@ -65,7 +63,8 @@ function LoginInner() {
         // Se confirmação de email estiver desligada, já tem sessão → vai direto
         if (data.session) {
           toast("Conta criada com sucesso!");
-          router.push(next);
+          window.location.assign(next);
+          return;
         } else {
           toast("Verifique seu email pra confirmar a conta.");
           setMode("entrar");
@@ -77,9 +76,9 @@ function LoginInner() {
         });
         if (error) throw error;
         toast("Bem-vindo de volta!");
-        router.push(next);
+        window.location.assign(next);
+        return;
       }
-      router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Algo deu errado";
       setErro(traducaoErro(msg));
@@ -137,25 +136,15 @@ function LoginInner() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === "criar" && (
-            <>
-              <Input
-                label="Seu nome"
-                placeholder="Como gosta de ser chamado"
-                leadingIcon={<User className="h-5 w-5" />}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                autoComplete="name"
-              />
-              <Input
-                label="Empresa"
-                placeholder="Onde você trabalha (opcional)"
-                leadingIcon={<Building2 className="h-5 w-5" />}
-                value={empresa}
-                onChange={(e) => setEmpresa(e.target.value)}
-                autoComplete="organization"
-              />
-            </>
+            <Input
+              label="Seu nome"
+              placeholder="Como gosta de ser chamado"
+              leadingIcon={<User className="h-5 w-5" />}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              required
+              autoComplete="name"
+            />
           )}
 
           <Input

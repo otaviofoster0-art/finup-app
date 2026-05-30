@@ -22,7 +22,6 @@ export default function FeedPage() {
         <FeedInner
           userId={s.userId}
           nome={s.nome}
-          empresa={s.empresa ?? "Empresa"}
           foto={s.fotoUrl}
         />
       )}
@@ -33,12 +32,10 @@ export default function FeedPage() {
 function FeedInner({
   userId,
   nome,
-  empresa,
   foto,
 }: {
   userId: string;
   nome: string;
-  empresa: string;
   foto: string | null;
 }) {
   const [busca, setBusca] = useState("");
@@ -75,7 +72,7 @@ function FeedInner({
               onClick={() => setComposerOpen(true)}
               className="press flex-1 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-left text-sm text-text-muted transition hover:border-brand/30"
             >
-              Compartilha uma conquista, {nome.split(" ")[0]}...
+              Compartilha uma conquista{nome.split(" ")[0] ? `, ${nome.split(" ")[0]}` : ""}...
             </button>
           </div>
         </Card>
@@ -98,8 +95,8 @@ function FeedInner({
                 <Trophy className="h-6 w-6" />
               </div>
               <div className="flex-1">
-                <div className="text-sm font-semibold text-text">Embaixadores</div>
-                <p className="text-xs text-text-muted">Top 3 que mais engajam o feed</p>
+                <div className="text-sm font-semibold text-text">Ranking global</div>
+                <p className="text-xs text-text-muted">Top 3 entre todos os usuários</p>
               </div>
             </div>
             <div className="mt-4 space-y-2">
@@ -179,7 +176,6 @@ function FeedInner({
         open={composerOpen}
         onClose={() => setComposerOpen(false)}
         autorNome={nome}
-        autorEmpresa={empresa}
         autorFoto={foto}
         publicar={publicar}
         xp={totalXp}
@@ -228,8 +224,7 @@ function PostCard({
                 )}
               </div>
               <div className="text-xs text-text-muted">
-                {post.autor_cargo || "Funcionário"}
-                {post.autor_empresa ? ` · ${post.autor_empresa}` : ""} · {tempo}
+                {post.autor_cargo ? `${post.autor_cargo} · ` : ""}{tempo}
               </div>
             </div>
             {isMine ? (
@@ -317,7 +312,6 @@ function ComposerSheet({
   open,
   onClose,
   autorNome,
-  autorEmpresa,
   autorFoto,
   publicar,
   xp,
@@ -326,7 +320,6 @@ function ComposerSheet({
   open: boolean;
   onClose: () => void;
   autorNome: string;
-  autorEmpresa: string;
   autorFoto: string | null;
   publicar: (texto: string, badge?: string) => Promise<unknown>;
   xp: number;
@@ -373,7 +366,7 @@ function ComposerSheet({
           <Avatar iniciais={iniciais} cor="from-brand to-brand-bright" foto={autorFoto} />
           <div>
             <div className="text-sm font-semibold text-text">{autorNome}</div>
-            <div className="text-xs text-text-muted">{autorEmpresa}</div>
+            <div className="text-xs text-text-muted">Compartilhando no feed</div>
           </div>
         </div>
 

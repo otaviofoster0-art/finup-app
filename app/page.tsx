@@ -20,7 +20,7 @@ export default function WelcomePage() {
       <section className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-12 pt-12 text-center md:pt-20">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/5 px-4 py-1.5 text-xs font-medium text-brand">
           <Sparkles className="h-3.5 w-3.5" />
-          Benefício corporativo de educação financeira
+          Educação financeira que vira hábito
         </span>
 
         <h1 className="text-balance text-5xl font-extrabold leading-[1.05] tracking-tight md:text-7xl">
@@ -30,8 +30,8 @@ export default function WelcomePage() {
         </h1>
 
         <p className="mt-6 max-w-xl text-balance text-base text-text-muted md:text-lg">
-          Apoio, diagnóstico e entrega num só lugar. Organize seu dinheiro,
-          aprenda com a trilha e comemore conquistas com os colegas da sua empresa.
+          Organize seu dinheiro, aprenda no seu ritmo com lições curtas estilo
+          Duolingo e comemore cada conquista com a comunidade.
         </p>
 
         <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-md sm:flex-row">
@@ -57,12 +57,12 @@ export default function WelcomePage() {
           <FeatureCard
             icon={<GraduationCap className="h-6 w-6" />}
             title="Trilha do conhecimento"
-            desc="Aulas curtas estilo Duolingo, exercícios práticos e recompensas reais a cada módulo concluído."
+            desc="Aulas curtas estilo Duolingo: XP, streak, vidas e provas pra pular o que você já sabe."
           />
           <FeatureCard
             icon={<Users className="h-6 w-6" />}
-            title="Comunidade da empresa"
-            desc="Feed pra trocar ideias, comemorar resultados e virar embaixador da educação financeira no trabalho."
+            title="Comunidade FinUp"
+            desc="Feed pra trocar ideias, ranking global e badges. Aprenda junto com quem está nessa também."
           />
         </div>
       </section>

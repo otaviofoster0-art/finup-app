@@ -14,6 +14,10 @@ export type UserSession = {
   valorSonho: number | null;
   fotoUrl: string | null;
   onboardingCompleto: boolean;
+  xpTotal: number;
+  nivel: number;
+  streak: number;
+  vidas: number;
 };
 
 /**
@@ -41,6 +45,10 @@ export function profileToSession(p: Profile): UserSession {
     valorSonho: p.valor_sonho == null ? null : Number(p.valor_sonho),
     fotoUrl: p.foto_url,
     onboardingCompleto: p.onboarding_completo,
+    xpTotal: p.xp_total ?? 0,
+    nivel: p.nivel ?? 1,
+    streak: p.streak ?? 0,
+    vidas: p.vidas ?? 5,
   };
 }
 

@@ -15,7 +15,8 @@ import {
   Sun,
   Target,
   Trophy,
-  Building2,
+  Flame,
+  Star,
 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SessionGate } from "@/components/session-gate";
@@ -52,7 +53,6 @@ function PerfilInner({ session }: { session: UserSession }) {
   const [editing, setEditing] = useState(false);
   const [nome, setNome] = useState(session.nome);
   const [bio, setBio] = useState(session.bio ?? "");
-  const [empresa, setEmpresa] = useState(session.empresa ?? "");
   const [sonho, setSonho] = useState(session.sonho ?? "");
   const [fotoDataUrl, setFotoDataUrl] = useState<string | null>(session.fotoUrl ?? null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -76,7 +76,6 @@ function PerfilInner({ session }: { session: UserSession }) {
     await updateProfile({
       nome,
       bio,
-      empresa: empresa || null,
       sonho: sonho || null,
       foto_url: fotoDataUrl,
     });
@@ -136,18 +135,15 @@ function PerfilInner({ session }: { session: UserSession }) {
               ) : (
                 <div className="mt-1 text-2xl font-extrabold leading-tight">{nome}</div>
               )}
-              <div className="mt-1 flex items-center gap-1.5 text-sm text-white/80">
-                <Building2 className="h-4 w-4" />
-                {editing ? (
-                  <input
-                    value={empresa}
-                    onChange={(e) => setEmpresa(e.target.value)}
-                    placeholder="Sua empresa"
-                    className="flex-1 rounded bg-white/15 px-2 py-0.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  />
-                ) : (
-                  empresa || "Sem empresa"
-                )}
+              <div className="mt-1 flex items-center gap-3 text-sm text-white/80">
+                <span className="inline-flex items-center gap-1">
+                  <Flame className="h-4 w-4" />
+                  {session.streak ?? 0} dias
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-4 w-4" />
+                  Nível {session.nivel ?? 1}
+                </span>
               </div>
             </div>
           </div>

@@ -26,9 +26,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Usa getSession() em vez de getUser(): lê do cookie sem round-trip ao Supabase.
+  // Evita falsos negativos quando a rede entre server e Supabase falha (ECONNRESET etc).
+  // Segurança: rotas privadas ainda revalidam via getUser() no client (SessionGate).
+  let user: { id: string } | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    user = data.session?.user ?? null;
+  } catch {
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const isPublic =

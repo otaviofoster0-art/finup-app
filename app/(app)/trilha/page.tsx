@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Coins, Flame, Lock, Star, Trophy, Sparkles, ChevronRight } from "lucide-react";
+import { Flame, Heart, KeyRound, Lock, Star, Trophy } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SessionGate } from "@/components/session-gate";
 import { Card } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { LessonModal } from "@/components/lesson-modal";
+import { SkipQuizModal } from "@/components/skip-quiz-modal";
 import { modulos, type Licao, type Modulo } from "@/lib/lessons";
 import { useLessonProgress } from "@/lib/hooks/use-lesson-progress";
+import { useGameState } from "@/lib/hooks/use-game-state";
 import { cn } from "@/lib/utils";
 
 type LessonStatus = "completed" | "current" | "locked";
@@ -19,35 +21,54 @@ export default function TrilhaPage() {
 }
 
 function TrilhaInner() {
-  const { progress, totalXp, totalConcluidas } = useLessonProgress();
+  const { progress, refresh: refreshProgress } = useLessonProgress();
+  const game = useGameState();
   const [moduloAtivoId, setModuloAtivoId] = useState<number>(1);
   const moduloAtivo = modulos.find((m) => m.id === moduloAtivoId) ?? modulos[0];
   const [aberta, setAberta] = useState<Licao | null>(null);
+  const [provaSkip, setProvaSkip] = useState<Modulo | null>(null);
 
   return (
     <>
       <AppHeader title="Trilha" />
       <main className="mx-auto w-full max-w-xl px-5 pb-10 pt-4">
-        {/* Stats globais */}
-        <div className="grid grid-cols-3 gap-3 stagger">
+        {/* Game stats */}
+        <div className="grid grid-cols-4 gap-2 stagger">
           <StatCard
             icon={<Flame className="h-5 w-5" />}
-            value={<AnimatedNumber value={totalConcluidas} />}
-            label="aulas feitas"
+            value={<AnimatedNumber value={game.streak} />}
+            label="streak"
             color="text-warning bg-warning/10"
           />
           <StatCard
             icon={<Star className="h-5 w-5" />}
-            value={<AnimatedNumber value={totalXp} />}
-            label="XP total"
+            value={<AnimatedNumber value={game.xpTotal} />}
+            label="XP"
             color="text-brand bg-brand-soft"
           />
           <StatCard
-            icon={<Coins className="h-5 w-5" />}
-            value={<AnimatedNumber value={totalConcluidas * 10} prefix="R$ " />}
-            label="conquistado"
+            icon={<Trophy className="h-5 w-5" />}
+            value={<AnimatedNumber value={game.nivel} />}
+            label="nível"
             color="text-gold bg-gold-soft"
           />
+          <StatCard
+            icon={<Heart className="h-5 w-5" />}
+            value={<AnimatedNumber value={game.vidas} />}
+            label="vidas"
+            color="text-danger bg-danger/10"
+          />
+        </div>
+
+        {/* Barra de nível */}
+        <div className="mt-3">
+          <div className="mb-1 flex items-center justify-between text-[11px] uppercase tracking-wider text-text-muted">
+            <span>Nível {game.nivel}</span>
+            <span className="tabular-nums">
+              {game.xpDoNivel}/{game.xpDoProximo} XP
+            </span>
+          </div>
+          <ProgressBar value={game.pctNivel} />
         </div>
 
         {/* Seletor de módulo */}
@@ -91,7 +112,7 @@ function TrilhaInner() {
         {/* Recompensa */}
         <Card className="mt-4 flex items-center gap-3 border-gold/30 bg-gold-soft">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gold text-[#3a2700]">
-            <Coins className="h-5 w-5" />
+            <Trophy className="h-5 w-5" />
           </div>
           <div className="flex-1 text-sm">
             <strong className="text-text">{moduloAtivo.recompensa}</strong>{" "}
@@ -141,16 +162,36 @@ function TrilhaInner() {
                     Módulo {moduloAtivo.id + 1} — {modulos[moduloAtivo.id]?.titulo}
                   </div>
                   <div className="text-xs text-text-muted">
-                    Desbloqueia ao concluir o atual
+                    Desbloqueia ao concluir o atual — ou faça a prova de skip
                   </div>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setProvaSkip(moduloAtivo)}
+                className="press mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-soft transition hover:opacity-90"
+              >
+                <KeyRound className="h-4 w-4" />
+                Já sei isso — fazer prova pra pular
+              </button>
             </div>
           )}
         </section>
       </main>
 
       <LessonModal licao={aberta} moduloId={moduloAtivo.id} onClose={() => setAberta(null)} />
+      <SkipQuizModal
+        modulo={provaSkip}
+        onClose={() => setProvaSkip(null)}
+        onAprovado={() => {
+          refreshProgress();
+          game.refresh();
+          // Pula visualização para o próximo módulo
+          if (provaSkip && provaSkip.id < modulos.length) {
+            setModuloAtivoId(provaSkip.id + 1);
+          }
+        }}
+      />
     </>
   );
 }

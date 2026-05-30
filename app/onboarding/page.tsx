@@ -54,7 +54,6 @@ export default function OnboardingPage() {
 
   // step 0
   const [nome, setNome] = useState("");
-  const [empresa, setEmpresa] = useState("");
   const [fotoDataUrl, setFotoDataUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -75,7 +74,6 @@ export default function OnboardingPage() {
     }
     if (profile) {
       setNome(profile.nome ?? "");
-      setEmpresa(profile.empresa ?? "");
       setFotoDataUrl(profile.foto_url ?? null);
       setSonho(profile.sonho ?? "");
       setValorSonho(profile.valor_sonho == null ? 0 : Number(profile.valor_sonho));
@@ -103,8 +101,7 @@ export default function OnboardingPage() {
   async function finalizar() {
     setSalvando(true);
     await updateProfile({
-      nome: nome.trim() || "Funcionário",
-      empresa: empresa.trim() || null,
+      nome: nome.trim() || "Você",
       foto_url: fotoDataUrl,
       sonho: sonho.trim() || null,
       valor_sonho: valorSonho || null,
@@ -177,7 +174,7 @@ export default function OnboardingPage() {
                 Vamos começar do começo: <span className="text-gradient-brand">como você se chama?</span>
               </h1>
               <p className="mt-3 text-text-muted">
-                Seu nome aparece pros colegas no feed. Pode usar como prefere ser chamado.
+                Seu nome aparece no feed pros outros usuários. Pode usar como prefere ser chamado.
               </p>
 
               <div className="mt-8 flex flex-col items-center gap-4">
@@ -212,13 +209,6 @@ export default function OnboardingPage() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   autoFocus
-                />
-                <Input
-                  label="Empresa onde trabalha"
-                  placeholder="Ex: Padaria do João"
-                  value={empresa}
-                  onChange={(e) => setEmpresa(e.target.value)}
-                  hint="Pode ser qualquer empresa. Você muda depois se precisar."
                 />
               </div>
             </div>
@@ -346,8 +336,8 @@ export default function OnboardingPage() {
 
               <div className="mt-8 grid w-full grid-cols-1 gap-3">
                 <ReadyItem title="Carteira" desc="Categorize gastos, monte caixinhas, veja quanto falta pro sonho." />
-                <ReadyItem title="Trilha" desc="Aulas curtas com recompensa real ao concluir cada módulo." />
-                <ReadyItem title="Feed" desc="Comemore com a galera e vire embaixador da educação financeira." />
+                <ReadyItem title="Trilha" desc="Aulas curtas com XP, streak e vidas. Avance no seu ritmo." />
+                <ReadyItem title="Feed" desc="Comemore com a galera e suba no ranking global da comunidade." />
               </div>
             </div>
           )}

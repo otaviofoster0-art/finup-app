@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, Lock, Sparkles, Trophy, X } from "lucide-react";
+import { Check, ChevronRight, Heart, Lock, Sparkles, Trophy, X } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useLessonProgress } from "@/lib/hooks/use-lesson-progress";
+import { useGameState } from "@/lib/hooks/use-game-state";
 import { LessonContent } from "@/components/lesson-content";
 import { VideoPlaceholder } from "@/components/video-placeholder";
 import { type Licao } from "@/lib/lessons";
@@ -23,6 +24,7 @@ type Fase = "conteudo" | "exercicios" | "resultado";
 export function LessonModal({ licao, moduloId, onClose, onConcluida }: LessonModalProps) {
   const toast = useToast();
   const { progress, concluirLicao } = useLessonProgress();
+  const { vidas, ganharXp, perderVida } = useGameState();
   const jaConcluida = !!progress.find((p) => p.licao_id === licao?.id && p.modulo_id === moduloId)?.concluida;
 
   const [fase, setFase] = useState<Fase>("conteudo");
@@ -50,7 +52,13 @@ export function LessonModal({ licao, moduloId, onClose, onConcluida }: LessonMod
   const acertou = escolhida === pergunta?.correta;
 
   function proxima() {
-    if (escolhida === pergunta.correta) setAcertos((a) => a + 1);
+    const acertouEssa = escolhida === pergunta.correta;
+    if (acertouEssa) {
+      setAcertos((a) => a + 1);
+    } else if (!jaConcluida) {
+      // Erro custa uma vida (não cobra em revisão de aula já feita)
+      perderVida();
+    }
 
     if (perguntaIdx === total - 1) {
       setFase("resultado");
@@ -64,6 +72,9 @@ export function LessonModal({ licao, moduloId, onClose, onConcluida }: LessonMod
     if (!licao) return;
     const xpGanho = Math.round((acertos / total) * licao.xp);
     await concluirLicao(moduloId, licao.id, acertos, xpGanho);
+    if (!jaConcluida && xpGanho > 0) {
+      await ganharXp(xpGanho);
+    }
     onConcluida?.(xpGanho);
     toast(`+ ${xpGanho} XP conquistados!`);
     onClose();
@@ -133,6 +144,24 @@ export function LessonModal({ licao, moduloId, onClose, onConcluida }: LessonMod
 
       {fase === "exercicios" && pergunta && (
         <div className="space-y-5">
+          {/* Vidas */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Heart
+                  key={i}
+                  className={cn(
+                    "h-4 w-4 transition",
+                    i < vidas ? "fill-danger text-danger" : "text-surface-2",
+                  )}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] uppercase tracking-wider text-text-muted">
+              Errar custa vida
+            </span>
+          </div>
+
           {/* progresso */}
           <div className="flex items-center gap-2">
             {licao.perguntas.map((_, i) => (

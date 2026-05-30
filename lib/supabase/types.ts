@@ -17,8 +17,22 @@ export type Profile = {
   valor_sonho: number | null;
   foto_url: string | null;
   onboarding_completo: boolean;
+  xp_total: number;
+  nivel: number;
+  streak: number;
+  streak_last_day: string | null;
+  vidas: number;
+  vidas_proxima_recarga: string | null;
   criado_em: string;
   atualizado_em: string;
+};
+
+export type ModuloPulado = {
+  user_id: string;
+  modulo_id: number;
+  acertos: number;
+  total: number;
+  criado_em: string;
 };
 
 export type UserCategoria = {
@@ -105,6 +119,7 @@ export type Database = {
       posts: TableShape<Post>;
       post_likes: TableShape<{ post_id: string; user_id: string; criado_em: string }>;
       lesson_progress: TableShape<LessonProgress>;
+      modulos_pulados: TableShape<ModuloPulado>;
     };
     Views: {
       posts_with_author: { Row: PostWithAuthor; Relationships: [] };

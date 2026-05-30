@@ -361,7 +361,7 @@ export const licoesModulo1: Licao[] = [
       instrutor: "Conteúdo FinUp",
     },
     conteudo: [
-      { tipo: "titulo", texto: "Por que assinatura é o produto perfeito (pra empresa)" },
+      { tipo: "titulo", texto: "Por que assinatura é o produto perfeito (pra quem cobra)" },
       {
         tipo: "paragrafo",
         texto:
@@ -1287,35 +1287,35 @@ export const modulos: Modulo[] = [
     id: 1,
     titulo: "Bases da educação financeira",
     descricao: "Onde tudo começa",
-    recompensa: "R$ 50 garantidos ao concluir",
+    recompensa: "Badge + 100 XP bônus",
     licoes: licoesModulo1,
   },
   {
     id: 2,
     titulo: "Investir sem mistério",
     descricao: "Da reserva ao Tesouro Direto, sem termos chatos",
-    recompensa: "R$ 75 ao concluir",
+    recompensa: "Badge + 150 XP bônus",
     licoes: licoesModulo2,
   },
   {
     id: 3,
     titulo: "Saindo do vermelho",
     descricao: "Estratégias pra zerar dívidas e nunca mais voltar pra elas",
-    recompensa: "R$ 75 ao concluir",
+    recompensa: "Badge + 150 XP bônus",
     licoes: licoesModulo3,
   },
   {
     id: 4,
     titulo: "Renda extra e crescimento",
     descricao: "Como aumentar quanto você ganha — venda, freela ou empreender",
-    recompensa: "R$ 100 ao concluir",
+    recompensa: "Badge + 200 XP bônus",
     licoes: licoesModulo4,
   },
   {
     id: 5,
     titulo: "Patrimônio e longo prazo",
     descricao: "Aposentadoria, imóveis, seguros e legado familiar",
-    recompensa: "R$ 100 ao concluir",
+    recompensa: "Badge + 200 XP bônus",
     licoes: licoesModulo5,
   },
 ];
