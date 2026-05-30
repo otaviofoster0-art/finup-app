@@ -75,8 +75,8 @@ export function LessonModal({ licao, moduloId, onClose, onConcluida }: LessonMod
     if (!jaConcluida && xpGanho > 0) {
       await ganharXp(xpGanho);
     }
-    onConcluida?.(xpGanho);
-    toast(`+ ${xpGanho} XP conquistados!`);
+    toast(xpGanho > 0 ? `+ ${xpGanho} XP conquistados!` : "Aula concluída!");
+    onConcluida?.(xpGanho); // dispara refresh de XP/vidas/progresso na trilha
     onClose();
   }
 

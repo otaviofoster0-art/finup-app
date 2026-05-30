@@ -179,7 +179,16 @@ function TrilhaInner() {
         </section>
       </main>
 
-      <LessonModal licao={aberta} moduloId={moduloAtivo.id} onClose={() => setAberta(null)} />
+      <LessonModal
+        licao={aberta}
+        moduloId={moduloAtivo.id}
+        onClose={() => setAberta(null)}
+        onConcluida={() => {
+          // Recarrega game state (streak/XP/vidas) e progresso após aula
+          game.refresh();
+          refreshProgress();
+        }}
+      />
       <SkipQuizModal
         modulo={provaSkip}
         onClose={() => setProvaSkip(null)}

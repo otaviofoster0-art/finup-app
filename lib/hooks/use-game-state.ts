@@ -76,54 +76,39 @@ export function useGameState() {
     refresh();
   }, [refresh]);
 
-  /** XP ganho → atualiza xp_total, recalcula nível, atualiza streak. */
-  const ganharXp = useCallback(
-    async (xp: number) => {
-      const supabase = getSupabaseBrowser();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !profile) return;
+  /**
+   * XP ganho → incremento ATÔMICO no servidor (RPC ganhar_xp).
+   * Imune a stale state: o cálculo soma no valor real do banco, não no
+   * profile.xp_total do closure React (que podia estar desatualizado e
+   * causar sobrescrita em vez de soma).
+   */
+  const ganharXp = useCallback(async (xp: number) => {
+    if (!xp) return;
+    const supabase = getSupabaseBrowser();
+    const { data, error } = await supabase.rpc("ganhar_xp", { p_xp: xp });
+    if (error) return;
+    const novo = (Array.isArray(data) ? data[0] : data) as Profile | null;
+    if (novo) setProfile((p) => (p ? { ...p, ...novo } : novo));
+  }, []);
 
-      const novoXp = (profile.xp_total ?? 0) + xp;
-      const novoNivel = nivelDoXp(novoXp);
-      const novoStreak = calcularStreak(profile.streak ?? 0, profile.streak_last_day ?? null);
-
-      const update = {
-        xp_total: novoXp,
-        nivel: novoNivel,
-        streak: novoStreak,
-        streak_last_day: hojeIso(),
-      };
-      await supabase.from("profiles").update(update).eq("id", user.id);
-      setProfile((p) => (p ? { ...p, ...update } : p));
-    },
-    [profile],
-  );
-
-  /** Erro em pergunta → perde 1 vida. */
+  /**
+   * Erro em pergunta → perde 1 vida ATOMICAMENTE (RPC perder_vida).
+   * Cada chamada decrementa do valor real do banco, então erros em
+   * sequência somam corretamente (antes, com closure, só descontava 1).
+   */
   const perderVida = useCallback(async () => {
     const supabase = getSupabaseBrowser();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !profile) return;
-    const atuais = profile.vidas ?? MAX_VIDAS;
-    if (atuais <= 0) return;
-    const novasVidas = atuais - 1;
-    // Se acabou de descer de 5, agenda recarga; senão mantém a recarga atual
-    const proxRecarga =
-      atuais === MAX_VIDAS || !profile.vidas_proxima_recarga
-        ? new Date(Date.now() + RECARGA_MS).toISOString()
-        : profile.vidas_proxima_recarga;
-
-    const update = {
-      vidas: novasVidas,
-      vidas_proxima_recarga: proxRecarga,
-    };
-    await supabase.from("profiles").update(update).eq("id", user.id);
-    setProfile((p) => (p ? { ...p, ...update } : p));
-  }, [profile]);
+    const { data, error } = await supabase.rpc("perder_vida");
+    if (error) return;
+    const novo = (Array.isArray(data) ? data[0] : data) as Profile | null;
+    if (novo) setProfile((p) => (p ? { ...p, ...novo } : novo));
+  }, []);
 
   const state: GameState = useMemo(() => {
     const xpTotal = profile?.xp_total ?? 0;
-    const nivel = profile?.nivel ?? nivelDoXp(xpTotal);
+    // Nível derivado do XP (fonte da verdade) — evita barra "150/50 XP"
+    // quando a coluna nivel fica dessincronizada do xp_total.
+    const nivel = nivelDoXp(xpTotal);
     const xpNivelAtual = xpDoProximoNivel(nivel - 1);
     const xpProximo = xpDoProximoNivel(nivel);
     const xpDoNivel = xpTotal - xpNivelAtual;
@@ -145,26 +130,6 @@ export function useGameState() {
 }
 
 /* ============== helpers ============== */
-
-function hojeIso(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function diasEntre(a: string, b: string): number {
-  const da = new Date(a + "T00:00:00").getTime();
-  const db = new Date(b + "T00:00:00").getTime();
-  return Math.round((db - da) / (1000 * 60 * 60 * 24));
-}
-
-function calcularStreak(atual: number, ultimoDia: string | null): number {
-  const hoje = hojeIso();
-  if (!ultimoDia) return 1;
-  const diff = diasEntre(ultimoDia, hoje);
-  if (diff === 0) return Math.max(1, atual);
-  if (diff === 1) return atual + 1;
-  return 1;
-}
 
 function reconciliarVidas(p: Profile): Partial<Profile> | null {
   const vidas = p.vidas ?? MAX_VIDAS;
