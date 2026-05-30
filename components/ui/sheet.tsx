@@ -30,32 +30,43 @@ export function Sheet({ open, onClose, title, children, side = "bottom" }: Sheet
   if (!open) return null;
 
   return (
-    /* Portal root — cobre a viewport inteira, z-index alto */
+    /* Usa style inline pra garantir dimensões corretas independente de
+       transforms/stacking contexts dos ancestrais — inset-0 sozinho
+       falha quando algum pai tem transform ou will-change */
     <div
       role="dialog"
       aria-modal="true"
-      className={cn(
-        "fixed inset-0 z-[100] flex",
-        side === "bottom" ? "items-end justify-center" : "items-center justify-center",
-      )}
-      style={{ isolation: "isolate" }}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: side === "bottom" ? "flex-end" : "center",
+        justifyContent: "center",
+      }}
     >
-      {/* Backdrop — div separado, pointer-events independente */}
+      {/* Backdrop */}
       <div
         aria-hidden="true"
         onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }}
+        className="backdrop-blur-sm animate-fade-in"
       />
 
-      {/* Painel — fica acima do backdrop via z-index relativo */}
+      {/* Painel */}
       <div
         className={cn(
-          "relative z-10 flex w-full flex-col overflow-hidden",
+          "relative flex flex-col overflow-hidden",
           "bg-surface border border-border shadow-2xl animate-scale-in",
+          "w-full",
           side === "bottom"
-            ? "max-w-xl rounded-t-3xl max-h-[92dvh]"
-            : "mx-3 max-w-lg rounded-3xl max-h-[90dvh]",
+            ? "max-w-xl rounded-t-3xl max-h-[92vh]"
+            : "mx-3 max-w-lg rounded-3xl max-h-[90vh]",
         )}
+        style={{ zIndex: 1 }}
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4">
